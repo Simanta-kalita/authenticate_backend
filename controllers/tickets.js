@@ -1,74 +1,119 @@
-const { User, Ticket } = require("../models/ticket");
+const connection = require("../db/db");
 
 const updateInfo = async (req, res) => {
   console.log(req.body);
   try {
-    const { ticketInfo, userInfo } = req.body;
+    const { seatNo, status, email, name } = req.body;
+    const date = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-    const ticketResult = await Ticket.findOneAndUpdate(
-      { seatNo: ticketInfo.seatNo },
-      ticketInfo,
-      { upsert: true }
+    const ticketInfo = {
+      seatNo,
+      status,
+      email,
+      name,
+      date,
+    };
+
+    const sql = `UPDATE tickets SET name = COALESCE( ?, name), email = COALESCE( ?, email), status = COALESCE( ?, status), date =  COALESCE( ?, date) WHERE seatNo = ?`;
+    connection.query(
+      sql,
+      [name, email, status, date, seatNo],
+      (err, result) => {
+        if (result.affectedRows === 0) {
+          const sql = "INSERT INTO tickets SET ?";
+          connection.query(sql, ticketInfo, (err, result) => {
+            if (err) throw err;
+            console.log(result);
+          });
+        }
+        if (err) throw err;
+        console.log(result);
+        res.send("Ticket added...");
+      }
     );
-    res.status(200).send(ticketResult);
+
+    //using REPLACE
+    // const sql = "REPLACE INTO tickets SET ?";
+    // connection.query(sql, ticketInfo, (err, result) => {
+    //   if (err) throw err;
+    //   console.log(result);
+    //   res.status(200).send("Ticket added...");
+    // });
   } catch (err) {
-    res.status(400).send(err);
+    res.send(err);
   }
 };
 
 const getTickets = async (req, res) => {
   const { status } = req.body;
   try {
-    const tickets = await Ticket.find({ status });
-    return {
-      tickets,
-    };
+    connection.query(
+      `SELECT * FROM tickets WHERE status='${status}' ORDER BY seatNo asc`,
+      function (err, data) {
+        if (err) {
+          res.send(err);
+        } else {
+          res.send({
+            data,
+          });
+        }
+      }
+    );
   } catch (err) {
-    return {
-      error: err,
-    };
+    res.send(err);
   }
 };
 
 const getTicketStatus = async (req, res) => {
-  const { seatNo } = req.body;
+  const { seatNo } = req.params;
   try {
-    const ticketData = await Ticket.findOne({ seatNo });
-    return {
-      ticketData,
-    };
+    connection.query(
+      `SELECT * FROM tickets WHERE seatNo=${seatNo} LIMIT 1`,
+      function (err, data) {
+        if (err) {
+          res.send(err);
+        } else {
+          res.send({
+            data,
+          });
+        }
+      }
+    );
   } catch (err) {
-    return {
-      error: err,
-    };
+    res.status(400).send(err);
   }
 };
 
 const userDetails = async (req, res) => {
-  const { email } = req.body;
+  const { seatNo } = req.params;
   try {
-    const userData = await User.findOne({ email });
-    return {
-      userData,
-    };
+    connection.query(
+      `SELECT name, email, (SELECT group_concat(seatNo) FROM (SELECT * from tickets WHERE email=(SELECT email FROM tickets WHERE seatNo=${seatNo})) AS T) AS seatNumbers FROM tickets WHERE seatNo=${seatNo}`,
+      function (err, data) {
+        if (err) {
+          res.send(err);
+        } else {
+          res.send({
+            data,
+          });
+        }
+      }
+    );
   } catch (err) {
-    return {
-      error: err,
-    };
+    res.status(400).send(err);
   }
 };
 
 const reset = async (req, res) => {
-  const { email } = req.body;
   try {
-    const userData = await Ticket.updateMany({ email });
-    return {
-      userData,
-    };
-  } catch (err) {
-    return {
-      error: err,
-    };
+    const sql = "UPDATE tickets SET `status`='open'";
+    connection.query(sql, (err, result) => {
+      if (err) throw err;
+      console.log(result);
+      res.send("All data is reset");
+    });
+  } catch (error) {
+    res.status(400).send(err);
   }
 };
 

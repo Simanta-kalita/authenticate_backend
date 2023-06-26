@@ -8,9 +8,10 @@ const {
   updateInfo,
 } = require("../controllers/tickets");
 
-console.log("hello ");
-
-router.post("/tickets", getTickets);
+router.post("/ticketInfo", getTickets);
 router.post("/setInfo", updateInfo);
+router.get("/status/:seatNo", getTicketStatus);
+router.get("/user/:seatNo", userDetails);
+router.get("/reset", reset);
 
 module.exports = router;
