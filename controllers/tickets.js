@@ -1,5 +1,6 @@
 const connection = require("../db/db");
 
+// update or insert ticket status
 const updateInfo = async (req, res) => {
   console.log(req.body);
   try {
@@ -28,22 +29,21 @@ const updateInfo = async (req, res) => {
         }
         if (err) throw err;
         console.log(result);
-        res.send("Ticket added...");
+        res.send({
+          statusCode: 200,
+          message: "Ticket added/updated",
+        });
       }
     );
-
-    //using REPLACE
-    // const sql = "REPLACE INTO tickets SET ?";
-    // connection.query(sql, ticketInfo, (err, result) => {
-    //   if (err) throw err;
-    //   console.log(result);
-    //   res.status(200).send("Ticket added...");
-    // });
   } catch (err) {
-    res.send(err);
+    res.send({
+      statusCode: 400,
+      message: err,
+    });
   }
 };
 
+// view open or closed tickets
 const getTickets = async (req, res) => {
   const { status } = req.body;
   try {
@@ -51,19 +51,28 @@ const getTickets = async (req, res) => {
       `SELECT * FROM tickets WHERE status='${status}' ORDER BY seatNo asc`,
       function (err, data) {
         if (err) {
-          res.send(err);
+          res.send({
+            statusCode: 400,
+            message: err,
+          });
         } else {
           res.send({
+            statusCode: 200,
+            message: "Query executed",
             data,
           });
         }
       }
     );
   } catch (err) {
-    res.send(err);
+    res.send({
+      statusCode: 400,
+      message: err,
+    });
   }
 };
 
+// view ticket status
 const getTicketStatus = async (req, res) => {
   const { seatNo } = req.params;
   try {
@@ -71,49 +80,80 @@ const getTicketStatus = async (req, res) => {
       `SELECT * FROM tickets WHERE seatNo=${seatNo} LIMIT 1`,
       function (err, data) {
         if (err) {
-          res.send(err);
+          res.send({
+            statusCode: 400,
+            message: err,
+          });
         } else {
           res.send({
+            statusCode: 200,
+            message: "Query executed",
             data,
           });
         }
       }
     );
   } catch (err) {
-    res.status(400).send(err);
+    res.send({
+      statusCode: 400,
+      message: err,
+    });
   }
 };
 
+// view Details of the person owning the ticket
 const userDetails = async (req, res) => {
   const { seatNo } = req.params;
   try {
     connection.query(
-      `SELECT name, email, (SELECT group_concat(seatNo) FROM (SELECT * from tickets WHERE email=(SELECT email FROM tickets WHERE seatNo=${seatNo})) AS T) AS seatNumbers FROM tickets WHERE seatNo=${seatNo}`,
+      `SELECT name, email, status, (SELECT group_concat(seatNo) FROM (SELECT * from tickets WHERE email=(SELECT email FROM tickets WHERE seatNo=${seatNo})) AS T) AS seatNumbers FROM tickets WHERE seatNo=${seatNo}`,
       function (err, data) {
         if (err) {
-          res.send(err);
-        } else {
           res.send({
-            data,
+            statusCode: 400,
+            message: err,
           });
+        } else {
+          if (data && data[0].status === "open") {
+            res.send({
+              statusCode: 200,
+              message: "No user data available for open tickets",
+            });
+          } else {
+            res.send({
+              statusCode: 200,
+              message: "Query executed",
+              data,
+            });
+          }
         }
       }
     );
   } catch (err) {
-    res.status(400).send(err);
+    res.send({
+      statusCode: 400,
+      message: err,
+    });
   }
 };
 
+// additional API for admin to reset the server (opens up all the tickets)
 const reset = async (req, res) => {
   try {
     const sql = "UPDATE tickets SET `status`='open'";
     connection.query(sql, (err, result) => {
       if (err) throw err;
       console.log(result);
-      res.send("All data is reset");
+      res.send({
+        statusCode: 200,
+        message: "All data is reset",
+      });
     });
   } catch (error) {
-    res.status(400).send(err);
+    res.send({
+      statusCode: 400,
+      message: err,
+    });
   }
 };
 

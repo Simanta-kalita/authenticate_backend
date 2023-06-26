@@ -7,9 +7,16 @@ const {
   reset,
   updateInfo,
 } = require("../controllers/tickets");
+const { insert, createTable, createDB } = require("../controllers/start");
 
-router.post("/ticketInfo", getTickets);
-router.post("/setInfo", updateInfo);
+// Basic routes needed after starting project
+router.get("/createdb", createDB);
+router.get("/createticketstable", createTable);
+router.get("/insert", insert);
+
+// Main business logic routes
+router.post("/info", getTickets);
+router.post("/update", updateInfo);
 router.get("/status/:seatNo", getTicketStatus);
 router.get("/user/:seatNo", userDetails);
 router.get("/reset", reset);
