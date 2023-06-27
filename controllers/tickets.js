@@ -16,13 +16,13 @@ const updateInfo = async (req, res) => {
     };
 
     const sql = `UPDATE tickets SET name = COALESCE( ?, name), email = COALESCE( ?, email), status = COALESCE( ?, status), date =  COALESCE( ?, date) WHERE seatNo = ?`;
-    connection.query(
+    await connection.query(
       sql,
       [name, email, status, date, seatNo],
-      (err, result) => {
+      async (err, result) => {
         if (result.affectedRows === 0) {
           const sql = "INSERT INTO tickets SET ?";
-          connection.query(sql, ticketInfo, (err, result) => {
+          await connection.query(sql, ticketInfo, (err, result) => {
             if (err) throw err;
             console.log(result);
           });
@@ -47,7 +47,7 @@ const updateInfo = async (req, res) => {
 const getTickets = async (req, res) => {
   const { status } = req.body;
   try {
-    connection.query(
+    await connection.query(
       `SELECT * FROM tickets WHERE status='${status}' ORDER BY seatNo asc`,
       function (err, data) {
         if (err) {
@@ -76,7 +76,7 @@ const getTickets = async (req, res) => {
 const getTicketStatus = async (req, res) => {
   const { seatNo } = req.params;
   try {
-    connection.query(
+    await connection.query(
       `SELECT * FROM tickets WHERE seatNo=${seatNo} LIMIT 1`,
       function (err, data) {
         if (err) {
@@ -105,7 +105,7 @@ const getTicketStatus = async (req, res) => {
 const userDetails = async (req, res) => {
   const { seatNo } = req.params;
   try {
-    connection.query(
+    await connection.query(
       `SELECT name, email, status, (SELECT group_concat(seatNo) FROM (SELECT * from tickets WHERE email=(SELECT email FROM tickets WHERE seatNo=${seatNo})) AS T) AS seatNumbers FROM tickets WHERE seatNo=${seatNo}`,
       function (err, data) {
         if (err) {
@@ -141,7 +141,7 @@ const userDetails = async (req, res) => {
 const reset = async (req, res) => {
   try {
     const sql = "UPDATE tickets SET `status`='open'";
-    connection.query(sql, (err, result) => {
+    await connection.query(sql, (err, result) => {
       if (err) throw err;
       console.log(result);
       res.send({
