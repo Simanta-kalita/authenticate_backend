@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "debug": "node index.js"
   },
@@ -12,7 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
+    "lodash": "^4.17.21",
     "mysql": "^2.18.1",
-    "mysql2": "^3.4.1"
+    "mysql2": "^3.4.1",
+    "nodemon": "^2.0.22",
+    "pino": "^8.14.1"
   }
 }

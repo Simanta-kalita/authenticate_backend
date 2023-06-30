@@ -1,3 +1,5 @@
+// util to get date to be saved in sql DB
+
 const getDate = () => {
   let date;
   date = new Date();

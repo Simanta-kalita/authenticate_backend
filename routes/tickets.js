@@ -10,8 +10,8 @@ const {
 const { insert, createTable, createDB } = require("../controllers/start");
 
 // Basic routes needed after starting project
-router.get("/createdb", createDB);
-router.get("/createticketstable", createTable);
+router.get("/db/create", createDB);
+router.get("/table/create", createTable);
 router.get("/insert", insert);
 
 // Main business logic routes
@@ -20,5 +20,17 @@ router.post("/update", updateInfo);
 router.get("/status/:seatNo", getTicketStatus);
 router.get("/user/:seatNo", userDetails);
 router.get("/reset", reset);
+
+// this is default in case of unmatched routes
+router.use(function (req, res) {
+  // Invalid request
+  res.json({
+    error: {
+      name: "Error",
+      message: "Invalid Request",
+      statusCode: 404,
+    },
+  });
+});
 
 module.exports = router;

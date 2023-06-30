@@ -1,3 +1,5 @@
+// util to precompute query string
+
 const updateOnlyIfExists = async () => {
   let queryStr = "";
   let queryValues = [];
@@ -11,6 +13,5 @@ const updateOnlyIfExists = async () => {
   }
 
   queryStr = queryStr.slice(0, -2);
-  console.log(queryStr, queryValues);
   return [queryStr, queryValues];
 };
